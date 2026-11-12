@@ -1,0 +1,32 @@
+# PyBox workspace state (open tabs and other per-device settings)
+.pybox/
+
+# Local environment variables (may hold secrets)
+.env
+
+# Python and tool caches
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.matplotlib/
+.ipython/
+.jupyter/
+.cache/
+*.py[cod]
+.coverage
+
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Virtual environments and secrets
+.venv/
+venv/
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
