@@ -1,3 +1,11 @@
+"""
+# game.py
+# Handle touch input
+# Select a piece
+# Display its legal moves
+# Send chosen move to board.make_move()
+
+"""
 from board import Board
 import pygame as py
 """
