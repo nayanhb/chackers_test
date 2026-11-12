@@ -17,161 +17,204 @@ class Board:
             [1, 0, 1, 0, 1, 0, 1, 0],
         ]
 
-        
+        self.lx, self.ly = None, None  # last click
+        self.move = 0
 
-    def update(self, move):
-        pass
-
-    def getLegalMove(self, x: int, y: int):
-        if not (0 <= x < 8 and 0 <= y < 8):
-            return []
-
-        lmoves = list()
-        if self.grid[y][x] == 1:
-            # left
-            if (
-                x - 2 >= 0
-                and y - 2 >= 0
-                and (self.grid[y - 1][x - 1] == -1 or self.grid[y - 1][x - 1] == -2)
-                and self.grid[y - 2][x - 2] == 0
-            ):
-                lmoves.append([x - 2, y - 2])
-            elif (
-                x - 1 >= 0
-                and y - 1 >= 0
-                and self.grid[y - 1][x - 1] == 0
-            ):
-                lmoves.append([x - 1,y - 1])
-            # right 
-            if (
-                x + 2 < 8
-                and y - 2 >= 0
-                and (self.grid[y - 1][x + 1] == -1 or self.grid[y - 1][x + 1] == -2)
-                and self.grid[y - 2][x + 2] == 0
-            ):
-                lmoves.append([x + 2, y - 2])
-            elif (
-                x + 1 < 8
-                and y - 1 >= 0
-                and self.grid[y - 1][x + 1] == 0
-            ):
-                lmoves.append([x + 1,y - 1])
+    def update(self, events):
+        size = min(self.w, self.h) // 8
         
-        elif self.grid[y][x] == -1:
-            # left
-            if (
-                x - 2 >= 0
-                and y + 2 < 8
-                and (self.grid[y + 1][x - 1] == 1 or self.grid[y + 1][x - 1] == 2)
-                and self.grid[y + 2][x - 2] == 0
-            ):
-                lmoves.append([x - 2, y + 2])
-            elif (
-                x - 1 >= 0
-                and y + 1 < 8
-                and self.grid[y + 1][x - 1] == 0
-            ):
-                lmoves.append([x - 1,y + 1])
-            # right 
-            if (
-                x + 2 < 8
-                and y + 2 < 8
-                and (self.grid[y + 1][x + 1] == 1 or self.grid[y + 1][x + 1] == 2)
-                and self.grid[y + 2][x + 2] == 0
-            ):
-                lmoves.append([x + 2, y + 2])
-            elif (
-                x + 1 < 8
-                and y + 1 < 8
-                and self.grid[y + 1][x + 1] == 0
-            ):
-                lmoves.append([x + 1,y + 1])
+        for event in events:
+            if event.type == py.FINGERDOWN:
+                cx = int(event.x * self.w) // size  # current click
+                cy = int(event.y * self.h) // size
+                if cx < 8 and cy < 8:
+                    if self.lx == None:  # selection
+                        if self.grid[cy][cx] != 0:
+                            self.move = self.grid[cy][cx]
+                            self.lx, self.ly = cx,cy
+                        
+                    elif self.lx != None:  # move
+                        #print(self.lx,self.ly,self.legalmove())
+                        if self.grid[cy][cx] == self.move:
+                            self.lx, self.ly = cx, cy
+                        elif [cx, cy] in self.legalmove() and self.grid[cy][cx] != self.move:
+                            self.grid[self.ly][self.lx] = 0
+                            self.grid[cy][cx] = self.move
+                            dx = cx - self.lx
+                            dy = cy - self.ly
+                            if dx == -2 and dy == -2:
+                                self.grid[self.ly - 1][self.lx - 1] = 0  # ty: ignore[unsupported-operator]
+                            elif dx == 2 and dy == -2:
+                                self.grid[self.ly - 1][self.lx + 1] = 0  # ty: ignore[unsupported-operator]
+                            elif dx == -2 and dy == 2:
+                                self.grid[self.ly + 1][self.lx - 1] = 0  # ty: ignore[unsupported-operator]
+                            elif dx == 2 and dy == 2:
+                                self.grid[self.ly + 1][self.lx + 1] = 0  # ty: ignore[unsupported-operator]
+                            
+                            if cy == 0 and self.grid[cy][cx] == 1:
+                                self.grid[cy][cx] = 2
+                            elif cy == 7 and self.grid[cy][cx] == -1:
+                                self.grid[cy][cx] = -2
+                            
+                            self.move = 0
+                            self.lx, self.ly = None, None
+                        else:
+                            if self.grid[cy][cx] != 0:#other oppent click
+                                self.move = self.grid[cy][cx]
+                                self.lx, self.ly = cx,cy
+                            else:#empty
+                                self.move = 0
+                                self.lx, self.ly = None, None
+
+    def legalmove(self):
+        if self.lx == None: return []
         
-        elif abs(self.grid[y][x]) == 2:
-            sign = 1 if self.grid[y][x] > 0 else -1
-            # UP
-            # left
-            if (
-                x - 2 >= 0
-                and y - 2 >= 0
-                and (self.grid[y - 1][x - 1] == -sign or self.grid[y - 1][x - 1] == -(sign << 1))
-                and self.grid[y - 2][x - 2] == 0
+        lmove = []
+        
+        if self.move == 1:
+            if ( # left
+                self.ly - 2 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx - 2 >= 0
+                and (
+                self.grid[self.ly - 1][self.lx - 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly - 1][self.lx - 1] == (-self.move << 1) # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly - 2][self.lx - 2] == 0  # ty: ignore[unsupported-operator]
             ):
-                lmoves.append([x - 2, y - 2])
-            elif (
-                x - 1 >= 0
-                and y - 1 >= 0
-                and self.grid[y - 1][x - 1] == 0
-            ):
-                lmoves.append([x - 1,y - 1])
-            # right 
-            if (
-                x + 2 < 8
-                and y - 2 >= 0
-                and (self.grid[y - 1][x + 1] == -sign or self.grid[y - 1][x + 1] == -(sign << 1))
-                and self.grid[y - 2][x + 2] == 0
-            ):
-                lmoves.append([x + 2, y - 2])
-            elif (
-                x + 1 < 8
-                and y - 1 >= 0
-                and self.grid[y - 1][x + 1] == 0
-            ):
-                lmoves.append([x + 1,y - 1])
-            # DOWN
-            # left
-            if (
-                x - 2 >= 0
-                and y + 2 < 8
-                and (self.grid[y + 1][x - 1] == -sign or self.grid[y + 1][x - 1] == -(sign << 1))
-                and self.grid[y + 2][x - 2] == 0
-            ):
-                lmoves.append([x - 2, y + 2])
-            elif (
-                x - 1 >= 0
-                and y + 1 < 8
-                and self.grid[y + 1][x - 1] == 0
-            ):
-                lmoves.append([x - 1,y + 1])
-            # right 
-            if (
-                x + 2 < 8
-                and y + 2 < 8
-                and (self.grid[y + 1][x + 1] == -sign or self.grid[y + 1][x + 1] == -(sign << 1))
-                and self.grid[y + 2][x + 2] == 0
-            ):
-                lmoves.append([x + 2, y + 2])
-            elif (
-                x + 1 < 8
-                and y + 1 < 8
-                and self.grid[y + 1][x + 1] == 0
-            ):
-                lmoves.append([x + 1,y + 1])
+                lmove.append([self.lx - 2,self.ly - 2])  # ty: ignore[unsupported-operator]
             
-        return (x,y),lmoves
+            elif (
+                self.ly - 1 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx - 1 >= 0
+                and self.grid[self.ly - 1][self.lx - 1] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx - 1,self.ly - 1])  # ty: ignore[unsupported-operator]
+            
+            
+            if ( # right 
+                self.ly - 2 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx + 2 < 8
+                and (
+                self.grid[self.ly - 1][self.lx + 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly - 1][self.lx + 1] == (-self.move << 1) # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly - 2][self.lx + 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 2,self.ly - 2])  # ty: ignore[unsupported-operator]
+            
+            elif (
+                self.ly - 1 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx + 1 < 8
+                and self.grid[self.ly - 1][self.lx + 1] == 0  # ty: ignore[unsupported-operator]
+                ):
+                lmove.append([self.lx + 1,self.ly - 1])  # ty: ignore[unsupported-operator]
+            
+            
+        elif self.move == -1:
+            if ( # left 
+                self.lx - 2 >= 0
+                and self.ly + 2 < 8  # ty: ignore[unsupported-operator]
+                and (
+                self.grid[self.ly + 1][self.lx - 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly + 1][self.lx - 1] == -self.move << 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly + 2][self.lx - 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx - 2, self.ly + 2])  # ty: ignore[unsupported-operator]
+            
+            elif self.lx - 1 >= 0 and self.ly + 1 < 8 and self.grid[self.ly + 1][self.lx - 1] == 0:  # ty: ignore[unsupported-operator]
+                lmove.append([self.lx - 1, self.ly + 1])  # ty: ignore[unsupported-operator]
+
+
+            if ( # right 
+                self.lx - 2 >= 0
+                and self.lx + 2 < 8
+                and self.ly + 2 < 8  # ty: ignore[unsupported-operator]
+                and (
+                self.grid[self.ly + 1][self.lx + 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly + 1][self.lx + 1] == -self.move << 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly + 2][self.lx + 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 2, self.ly + 2])  # ty: ignore[unsupported-operator]
+            
+            elif (
+                self.lx + 1 < 8
+                and self.ly + 1 < 8  # ty: ignore[unsupported-operator]
+                and self.grid[self.ly + 1][self.lx + 1] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 1, self.ly + 1])  # ty: ignore[unsupported-operator]
         
-    def getAllLegalMoves(self,turn:int) -> list:
-        lmoves = dict()
-        capture = False
-        for x in range(8):
-            for y in range(8):
-                if self.grid[y][x] * turn > 0:
-                    pos , moves = self.getLegalMove(x,y)
-                    
-                    for move in moves:
-                        if abs(pos[0] - move[0]) == 2:
-                            capture = True
-                    
-                    lmoves[pos] = moves
         
+        elif self.move == 2 or self.move == -2:
+            if ( # left
+                self.ly - 2 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx - 2 >= 0
+                and(
+                self.grid[self.ly - 1][self.lx - 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly - 1][self.lx - 1] == -self.move >> 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly - 2][self.lx - 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx - 2,self.ly - 2])  # ty: ignore[unsupported-operator]
+            
+            elif (
+                self.ly - 1 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx - 1 >= 0
+                and self.grid[self.ly - 1][self.lx - 1] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx - 1,self.ly - 1])  # ty: ignore[unsupported-operator]
+            
+            
+            if ( # right 
+                self.ly - 2 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx + 2 < 8
+                and (
+                self.grid[self.ly - 1][self.lx + 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly - 1][self.lx + 1] == -self.move >> 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly - 2][self.lx + 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 2,self.ly - 2])  # ty: ignore[unsupported-operator]
+            
+            elif (
+                self.ly - 1 >= 0  # ty: ignore[unsupported-operator]
+                and self.lx + 1 < 8
+                and self.grid[self.ly - 1][self.lx + 1] == 0  # ty: ignore[unsupported-operator]
+                ):
+                lmove.append([self.lx + 1,self.ly - 1])  # ty: ignore[unsupported-operator]
+            
+            if ( # left 
+                self.lx - 2 >= 0
+                and self.ly + 2 < 8  # ty: ignore[unsupported-operator]
+                and (
+                self.grid[self.ly + 1][self.lx - 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly + 1][self.lx - 1] == -self.move >> 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly + 2][self.lx - 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx - 2, self.ly + 2])  # ty: ignore[unsupported-operator]
+            
+            elif self.lx - 1 >= 0 and self.ly + 1 < 8 and self.grid[self.ly + 1][self.lx - 1] == 0:  # ty: ignore[unsupported-operator]
+                lmove.append([self.lx - 1, self.ly + 1])  # ty: ignore[unsupported-operator]
+
+
+            if ( # right 
+                self.lx + 2 < 8
+                and self.ly + 2 < 8  # ty: ignore[unsupported-operator]
+                and (
+                self.grid[self.ly + 1][self.lx + 1] == -self.move  # ty: ignore[unsupported-operator]
+                or self.grid[self.ly + 1][self.lx + 1] == -self.move >> 1 # ty: ignore[unsupported-operator]
+                )
+                and self.grid[self.ly + 2][self.lx + 2] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 2, self.ly + 2])  # ty: ignore[unsupported-operator]
+            
+            elif (
+                self.lx + 1 < 8
+                and self.ly + 1 < 8  # ty: ignore[unsupported-operator]
+                and self.grid[self.ly + 1][self.lx + 1] == 0  # ty: ignore[unsupported-operator]
+            ):
+                lmove.append([self.lx + 1, self.ly + 1])  # ty: ignore[unsupported-operator]
         
-        if capture:
-            moves = dict()
-            for pos, moves in lmoves.items():
-                captures = [move for move in moves if abs(pos[0] - move[0]) == 2]
-                if captures:
-                    moves[pos] = captures
-                
-            return moves
-        
-        return lmoves
+        return lmove
