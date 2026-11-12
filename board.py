@@ -217,4 +217,4 @@ class Board:
             ):
                 lmove.append([self.lx + 1, self.ly + 1])  # ty: ignore[unsupported-operator]
         
-        return lmove
+        return lmove 
