@@ -30,15 +30,17 @@ class Board:
                     if move.to == i:
                         self.grid[move.to[1]][move.to[0]] = self.grid[move.frm[1]][move.frm[0]]
                         self.grid[move.frm[1]][move.frm[0]] = 0
+                        
                         if abs(move.frm[0] - move.to[0]) == 2:
                             self.grid[(move.frm[1]+move.to[1])//2][(move.frm[0]+move.to[0])//2] = 0
-                        self.turn = -self.turn
+                            
+                        if not self.captures(self.getAllLegalMoves()):
+                            self.turn = -self.turn
+                        
                         break
-        if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or move.to == 7:
-            self.grid[move.to[1]][move.to[0]] = -self.turn << 1
-        if self.captures(self.getAllLegalMoves()):
-            self.turn = self.grid[move.to[1]][move.to[0]] if abs(self.grid[move.to[1]][move.to[0]]) == 1 else self.grid[move.to[1]][move.to[0]] << 1
-
+        if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or (move.to[1] == 7 and self.grid[move.to[1]][move.to[0]] == -1):
+            self.grid[move.to[1]][move.to[0]] = self.grid[move.to[1]][move.to[0]] << 1
+            
     def getLegalMove(self, x: int, y: int):
         if not (0 <= x < 8 and 0 <= y < 8):
             return []
