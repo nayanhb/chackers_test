@@ -1,5 +1,9 @@
 import pygame as py
 
+class Move:
+    def __init__(self, frm, to):
+        self.frm = tuple(frm)
+        self.to = list(to)
 
 class Board:
     def __init__(self, w, h):
@@ -17,10 +21,23 @@ class Board:
             [1, 0, 1, 0, 1, 0, 1, 0],
         ]
 
-        
+        self.turn = 1
 
-    def update(self, move):
-        pass
+    def move(self, move:Move):
+        for key, moves in self.getAllLegalMoves().items():
+            if move.frm == key:
+                for i in moves:
+                    if move.to == i:
+                        self.grid[move.to[1]][move.to[0]] = self.grid[move.frm[1]][move.frm[0]]
+                        self.grid[move.frm[1]][move.frm[0]] = 0
+                        if abs(move.frm[0] - move.to[0]) == 2:
+                            self.grid[(move.frm[1]+move.to[1])//2][(move.frm[0]+move.to[0])//2] = 0
+                        self.turn = -self.turn
+                        break
+        if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or move.to == 7:
+            self.grid[move.to[1]][move.to[0]] = -self.turn << 1
+        if self.captures(self.getAllLegalMoves()):
+            self.turn = self.grid[move.to[1]][move.to[0]] if abs(self.grid[move.to[1]][move.to[0]]) == 1 else self.grid[move.to[1]][move.to[0]] << 1
 
     def getLegalMove(self, x: int, y: int):
         if not (0 <= x < 8 and 0 <= y < 8):
@@ -150,12 +167,12 @@ class Board:
             
         return (x,y),lmoves
         
-    def getAllLegalMoves(self,turn:int) -> list:
+    def getAllLegalMoves(self) -> dict:
         lmoves = dict()
         capture = False
         for x in range(8):
             for y in range(8):
-                if self.grid[y][x] * turn > 0:
+                if self.grid[y][x] * self.turn > 0:
                     pos , moves = self.getLegalMove(x,y)
                     
                     for move in moves:
@@ -166,12 +183,16 @@ class Board:
         
         
         if capture:
-            moves = dict()
-            for pos, moves in lmoves.items():
-                captures = [move for move in moves if abs(pos[0] - move[0]) == 2]
-                if captures:
-                    moves[pos] = captures
-                
-            return moves
+            newMoves = self.captures(lmoves)
+            return newMoves
         
         return lmoves
+
+    def captures(self,lmoves):
+        newMoves = dict()
+        for pos, moves in lmoves.items():
+            captures = [move for move in moves if abs(pos[0] - move[0]) == 2]
+            if captures:
+                newMoves[pos] = captures
+                
+        return newMoves
