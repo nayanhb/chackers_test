@@ -24,6 +24,7 @@ class Board:
         self.turn = 1
 
     def move(self, move:Move):
+        print(self.captures(self.getAllLegalMoves()))
         for key, moves in self.getAllLegalMoves().items():
             if move.frm == key:
                 for i in moves:
@@ -33,10 +34,13 @@ class Board:
                         
                         if abs(move.frm[0] - move.to[0]) == 2:
                             self.grid[(move.frm[1]+move.to[1])//2][(move.frm[0]+move.to[0])//2] = 0
-                            
-                        if not self.captures(self.getAllLegalMoves()):
-                            self.turn = -self.turn
                         
+                        for key , move in self.captures(self.getAllLegalMoves()):
+                            print(key)
+                            if self.grid[key[1]][key[0]] * self.turn > 0:
+                                break
+                        else:
+                                self.turn = -self.turn
                         break
         if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or (move.to[1] == 7 and self.grid[move.to[1]][move.to[0]] == -1):
             self.grid[move.to[1]][move.to[0]] = self.grid[move.to[1]][move.to[0]] << 1
