@@ -50,7 +50,8 @@ def drawBoard(screen,size,board:Board,posx,posy):
     moves = board.getLegalMove(posx,posy)[1]
     if moves and board.grid[posy][posx] * board.turn > 0:
         for move in moves:
-            py.draw.rect(screen,(20,10,20),(move[0]*size,move[1]*size, size, size),10)
+            if move in board.getAllMove():
+                py.draw.rect(screen,(20,10,20),(move[0]*size,move[1]*size, size, size),10)
 
 py.init()
 

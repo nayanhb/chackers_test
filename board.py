@@ -197,3 +197,13 @@ class Board:
                 newMoves[pos] = captures
                 
         return newMoves
+    
+    def allMove(self) -> list:
+        moves = list()
+        l = self.getAllLegalMoves().values()
+        for i in l:
+            for j in i:
+                moves.append(j)
+        return moves
+    
+    
