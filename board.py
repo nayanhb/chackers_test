@@ -1,3 +1,4 @@
+from time import sleep
 
 class Move:
     def __init__(self, frm, to):
@@ -33,8 +34,7 @@ class Board:
                         if abs(move.frm[0] - move.to[0]) == 2:
                             self.grid[(move.frm[1]+move.to[1])//2][(move.frm[0]+move.to[0])//2] = 0
                             
-                            if self.captures(self.getAllLegalMoves()):
-                                self.turn = -self.turn
+                            self.multikil(tuple(move.to))
                         self.turn = -self.turn
                         break
         if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or (move.to[1] == 7 and self.grid[move.to[1]][move.to[0]] == -1):
@@ -205,5 +205,15 @@ class Board:
             for j in i:
                 moves.append(j)
         return moves
-    
-    
+        
+    def multikil(self,m) -> None:
+        while self.captures(self.getAllLegalMoves()):
+            moves = self.getAllLegalMoves()
+            for key, value in moves.items():
+                move = value[0]
+                self.grid[move[1]][move[0]] = self.grid[key[1]][key[0]]
+                self.grid[key[1]][key[0]] = 0
+                self.grid[(key[1]+move[1])//2][(key[0]+move[0])//2] = 0
+                break
+                
+            sleep(5)
