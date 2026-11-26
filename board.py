@@ -10,11 +10,22 @@ class Board:
         self.w = w
         self.h = h
         # black = -1; white = 1; 2 = if the touch the end
+        # self.grid = [
+        #     [0, -1, 0, -1, 0, -1, 0, -1],
+        #     [-1, 0, -1, 0, -1, 0, -1, 0],
+        #     [0, -1, 0, -1, 0, -1, 0, -1],
+        #     [0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0],
+        #     [1, 0, 1, 0, 1, 0, 1, 0],
+        #     [0, 1, 0, 1, 0, 1, 0, 1],
+        #     [1, 0, 1, 0, 1, 0, 1, 0],
+        # ]
+        
         self.grid = [
-            [0, -1, 0, -1, 0, -1, 0, -1],
-            [-1, 0, -1, 0, -1, 0, -1, 0],
-            [0, -1, 0, -1, 0, -1, 0, -1],
+            [0, 2, 0, 0, 0, 0, 0, 0],
+            [0, 0, -1, 0, -1, 0, -1, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, -1, 0, -1, 0, -1, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
             [1, 0, 1, 0, 1, 0, 1, 0],
             [0, 1, 0, 1, 0, 1, 0, 1],
@@ -22,25 +33,38 @@ class Board:
         ]
 
         self.turn = 1
+        self.must_continue = None
 
-    def move(self, move:Move):
-        for key, moves in self.getAllLegalMoves().items():
-            if move.frm == key:
-                for i in moves:
-                    if move.to == i:
-                        self.grid[move.to[1]][move.to[0]] = self.grid[move.frm[1]][move.frm[0]]
-                        self.grid[move.frm[1]][move.frm[0]] = 0
-                        
-                        if abs(move.frm[0] - move.to[0]) == 2:
-                            self.grid[(move.frm[1]+move.to[1])//2][(move.frm[0]+move.to[0])//2] = 0
-                            
-                            self.multikil(tuple(move.to))
-                        self.turn = -self.turn
-                        break
-        if (move.to[1] == 0 and self.grid[move.to[1]][move.to[0]] == 1) or (move.to[1] == 7 and self.grid[move.to[1]][move.to[0]] == -1):
-            self.grid[move.to[1]][move.to[0]] = self.grid[move.to[1]][move.to[0]] << 1
+    def move(self, move:Move) -> bool:
+        legal_move = self.getAllLegalMoves()
+        
+        if move.frm not in legal_move or move.to not in legal_move[move.frm]:
+            return False
+        
+        piece = self.grid[move.frm[1]][move.frm[0]]
+        is_capture = abs(move.frm[0] - move.to[0]) == 2
+        
+        self.grid[move.to[1]][move.to[0]] = piece
+        self.grid[move.frm[1]][move.frm[0]] = 0
+        
+        if is_capture:
+            middle_x = (move.frm[0] + move.to[0]) // 2
+            middle_y = (move.frm[1] + move.to[1]) // 2
+            self.grid[middle_y][middle_x] = 0
+        
+        #promotion
+        if (move.to[1] == 0 and piece == 1) or (move.to[1] == 7 and piece == -1):
+            self.grid[move.to[1]][move.to[0]] *= 2
             
+        if is_capture and self.multikil(move.to):
+            self.must_continue = tuple(move.to)
+        else:
+            self.must_continue = None
+            self.turn *= -1
+        return True
+        
     def getLegalMove(self, x: int, y: int):
+        """It gives a dictionary of all possible move of the given piece"""
         if not (0 <= x < 8 and 0 <= y < 8):
             return []
 
@@ -169,6 +193,12 @@ class Board:
         return (x,y),lmoves
         
     def getAllLegalMoves(self) -> dict:
+        if self.must_continue is not None:
+            pos = self.must_continue
+            _, moves = self.getLegalMove(*pos)
+            captures = [move for move in moves if abs(pos[0] - move[0]) == 2]
+            return {pos: captures} if captures else {}
+        
         lmoves = dict()
         capture = False
         for x in range(8):
@@ -200,20 +230,15 @@ class Board:
     
     def allMove(self) -> list:
         moves = list()
-        l = self.getAllLegalMoves().values()
-        for i in l:
-            for j in i:
-                moves.append(j)
+        for frm, move in self.getAllLegalMoves().items():
+            for to in move:
+                moves.append(Move(frm,to))
         return moves
         
-    def multikil(self,m) -> None:
-        while self.captures(self.getAllLegalMoves()):
-            moves = self.getAllLegalMoves()
-            for key, value in moves.items():
-                move = value[0]
-                self.grid[move[1]][move[0]] = self.grid[key[1]][key[0]]
-                self.grid[key[1]][key[0]] = 0
-                self.grid[(key[1]+move[1])//2][(key[0]+move[0])//2] = 0
-                break
-                
-            sleep(5)
+    def multikil(self,pos) -> list:
+        _,moves = self.getLegalMove(*pos)
+        
+        return [destination
+                for destination in moves
+                if abs(pos[0] - destination[0]) == 2
+                ]
