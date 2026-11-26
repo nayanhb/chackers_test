@@ -79,8 +79,14 @@ while running:
             x,y = event.x * w, event.y * h
             x, y = int(x // (SIZE // 8)),int(y // (SIZE // 8))
             lastPos = update(lastPos,[x,y])
-            
-    # board.update(events)
+    
+    if board.win()[0]:
+        winner = board.win()[1]
+        if winner == 1:
+            print("The winner is White")
+        elif winner == -1:
+            print("The winner is Black")
+        break 
     
     screen.fill((10, 15, 5))
     

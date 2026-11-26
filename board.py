@@ -10,22 +10,11 @@ class Board:
         self.w = w
         self.h = h
         # black = -1; white = 1; 2 = if the touch the end
-        # self.grid = [
-        #     [0, -1, 0, -1, 0, -1, 0, -1],
-        #     [-1, 0, -1, 0, -1, 0, -1, 0],
-        #     [0, -1, 0, -1, 0, -1, 0, -1],
-        #     [0, 0, 0, 0, 0, 0, 0, 0],
-        #     [0, 0, 0, 0, 0, 0, 0, 0],
-        #     [1, 0, 1, 0, 1, 0, 1, 0],
-        #     [0, 1, 0, 1, 0, 1, 0, 1],
-        #     [1, 0, 1, 0, 1, 0, 1, 0],
-        # ]
-        
         self.grid = [
-            [0, 2, 0, 0, 0, 0, 0, 0],
-            [0, 0, -1, 0, -1, 0, -1, 0],
+            [0, -1, 0, -1, 0, -1, 0, -1],
+            [-1, 0, -1, 0, -1, 0, -1, 0],
+            [0, -1, 0, -1, 0, -1, 0, -1],
             [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, -1, 0, -1, 0, -1, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
             [1, 0, 1, 0, 1, 0, 1, 0],
             [0, 1, 0, 1, 0, 1, 0, 1],
@@ -62,6 +51,20 @@ class Board:
             self.must_continue = None
             self.turn *= -1
         return True
+        
+    def win(self) -> tuple[bool,int]:
+        black = any(-1 in row or -2 in row for row in self.grid)
+        white = any(1 in row or 2 in row for row in self.grid)
+        
+        if not black:
+            return True,1
+        elif not white:
+            return True,-1
+        
+        if not self.getAllLegalMoves():
+            return True,-self.turn
+        
+        return False,0
         
     def getLegalMove(self, x: int, y: int):
         """It gives a dictionary of all possible move of the given piece"""
