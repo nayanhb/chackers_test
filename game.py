@@ -14,8 +14,8 @@ SETTINGS
 SIZE = 850
 
 def update(lastPos,pos):
-    if pos[0] >= 8 or pos[0] < 0:
-        return
+    if pos[0] >= 8 or pos[0] < 0 or pos[1] >= 8 or pos[1] < 0:
+        return lastPos
     board.move(Move(lastPos,pos))
     lastPos = pos
     return lastPos
@@ -46,13 +46,14 @@ def drawBoard(screen,size,board:Board,posx,posy):
                 py.draw.circle(screen,(0,0,0),((x + 0.5)*size,(y + 0.5)*size),size//2 - 10)
                 py.draw.circle(screen,(230,230,230),((x + 0.5)*size,(y + 0.5)*size),size//2 - 10,5)
                 py.draw.circle(screen,(230,230,230),((x + 0.5)*size,(y + 0.5)*size),5)
-    
-    moves = board.getLegalMove(posx,posy)[1]
-    if moves and board.grid[posy][posx] * board.turn > 0:
-        for move in moves:
-            for m in board.allMove():
-                if move == m.to:
-                    py.draw.rect(screen,(20,10,20),(move[0]*size,move[1]*size, size, size),10)
+                
+    if not (posx >= 8 or posx < 0 or posy >= 8 or posy < 0):
+        moves = board.getLegalMove(posx,posy)[1]
+        if moves and board.grid[posy][posx] * board.turn > 0:
+            for move in moves:
+                for m in board.allMove():
+                    if move == m.to:
+                        py.draw.rect(screen,(20,10,20),(move[0]*size,move[1]*size, size, size),10)
 
 py.init()
 
